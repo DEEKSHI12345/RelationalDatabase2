@@ -1,0 +1,21 @@
+﻿<div class="row">
+    <div class="col-md-6 mt-4">
+        <div id="screen-one">
+            @if (Model.TableColumns != null && Model.TableColumns.Any())
+            {
+                @foreach (var table in Model.TableColumns)
+                {
+                    <div>
+                        <i class="fas fa-folder"></i>@table.Table
+                        <ul>
+                            @foreach (var column in table.Columns)
+                            {
+                                <li><i class="fas fa-th"></i>@column</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

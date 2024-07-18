@@ -1,0 +1,164 @@
+﻿@page
+@model AZURE_AI.Pages.IndexModel
+
+<style>
+    .panel-heading {
+        padding: 0px;
+        /* if not working use !important rule */
+    }
+
+    .scrollable-section {
+        max-height: 300px; /* Adjust the height as needed */
+        overflow-y: auto;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.table-checkbox').forEach(tableCheckbox => {
+            tableCheckbox.addEventListener('change', function() {
+                const table = this.dataset.table;
+                document.querySelectorAll(`.column-checkbox[data-table="${table}"]`).forEach(columnCheckbox => {
+                    columnCheckbox.checked = this.checked;
+                });
+            });
+        });
+
+        document.querySelectorAll('.column-checkbox').forEach(columnCheckbox => {
+            columnCheckbox.addEventListener('change', function() {
+                const table = this.dataset.table;
+                const allChecked = document.querySelectorAll(`.column-checkbox[data-table="${table}"]:checked`).length === document.querySelectorAll(`.column-checkbox[data-table="${table}"]`).length;
+                document.querySelector(`.table-checkbox[data-table="${table}"]`).checked = allChecked;
+            });
+        });
+    });
+</script>
+
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mt-4">Chat with your relational database!</h2>
+        <hr />
+        <br />
+    </div>
+
+    <div class="col-md-12">
+        <form method="post" class="form">
+            <div class="form-group mb-3">
+                <h4 for="name">Your Prompt</h4>
+                <textarea type="text" asp-for="@Model.UserPrompt" class="form-control"></textarea>
+            </div>
+            <input type="submit" class="btn btn-success" value="Generate Query" />
+            <input type="hidden" asp-for="LastGeneratedQuery" />
+        </form>
+        <hr />
+
+        @if (!string.IsNullOrEmpty(Model.Error))
+        {
+            <p><b>Error:</b> @Model.Error</p>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Summary))
+        {
+            <p><b>AI generated summary:</b> @Model.Summary</p>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Query))
+        {
+            <p><b>AI generated query:</b> @Model.Query</p>
+        }
+
+        @if (Model.Data != null)
+        {
+            <p><b>Data results:</b></p>
+            <div class="overflow-scroll">
+                <table class="table table-striped">
+                    @foreach (var row in Model.Data)
+                    {
+                        <tr>
+                            @foreach (var col in row)
+                            {
+                                <td>@col</td>
+                            }
+                        </tr>
+                    }
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mt-4">
+        <div id="screen-one" class="scrollable-section">
+            <h1>Used Tables & Columns</h1>
+            @if (Model.TableColumns != null && Model.TableColumns.Any())
+            {
+                    <div>
+                    @foreach (var table in Model.TableColumns)
+                    {
+                            <div>
+                                <i class="fas fa-folder"></i> @table.Table
+                                <ul>
+                                @foreach (var column in table.Columns)
+                                {
+                                        <li>
+                                            <i class="fas fa-th"></i> @column
+                                        </li>
+                                }
+                                </ul>
+                            </div>
+                    }
+                    </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-6 mt-4">
+    <div id="screen-two" class="scrollable-section">
+        <h1>Entire Schema</h1>
+            @if (Model.DatabaseSchema != null)
+            {
+                <form method="post" asp-page-handler="UpdateQuery">
+                    <input type="hidden" name="UserPrompt" value="@Model.UserPrompt" />
+                    <input type="hidden" name="Query" value="@Model.Query" />
+                    <input type="hidden" name="LastGeneratedQuery" value="@Model.LastGeneratedQuery" />
+
+                    @foreach (var table in Model.DatabaseSchema)
+                    {
+                        <div>
+                            @if (Model.Foreign!=null && Model.Foreign.Contains(table.TableName))
+                            {
+                                <input  type="checkbox" class="table-checkbox" data-table="@table.TableName" />
+                                <i class="fas fa-folder"></i> @table.TableName
+                                <ul>
+                                    @foreach (var column in table.Columns)
+                                    {
+                                        <li>
+                                            <input  type="checkbox" name="SelectedColumns" class="column-checkbox" data-table="@table.TableName" data-column="@column" value="@($"{table.TableName}.{column}")" />
+                                            <i class="fas fa-th"></i> @column
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <input disabled type="checkbox" class="table-checkbox" data-table="@table.TableName" />
+                                <i class="fas fa-folder"></i> @table.TableName
+                                <ul>
+                                    @foreach (var column in table.Columns)
+                                    {
+                                        <li>
+                                            <input disabled type="checkbox" name="SelectedColumns" class="column-checkbox" data-table="@table.TableName" data-column="@column" value="@($"{table.TableName}.{column}")" />
+                                            <i class="fas fa-th"></i> @column
+                                        </li>
+                                    }
+                                </ul>
+                            }
+
+                            </div>
+                    }
+                    <input type="submit" class="btn btn-primary" value="Update Query and Generate Report" />
+                </form>
+            }
+    </div>
+</div>
+</div>

@@ -1,0 +1,30 @@
+﻿@page
+@model AZURE_AI.Pages.IndexModel
+
+<style>
+    .panel-heading {
+        padding: 0px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-6 mt-4">
+        <div id="screen-two">
+            @if (Model.DatabaseSchema != null)
+            {
+                foreach (var table in Model.DatabaseSchema)
+                {
+                    <div>
+                        <i class="fas fa-folder"></i> @table.TableName
+                        <ul>
+                            @foreach (var column in table.Columns)
+                            {
+                                <li><i class="fas fa-th"></i> @column</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
